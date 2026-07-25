@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Contact;
+use App\Services\BookingService;
+use App\Services\ContactService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -11,13 +13,18 @@ use Illuminate\Validation\Rules\Password;
 
 class AdminController extends Controller
 {
+    public function __construct(
+        private BookingService $bookings,
+        private ContactService $contacts,
+    ) {}
+
     public function dashboard()
     {
-        $totalReservations = Booking::count();
-        $confirmedToday    = Booking::whereDate('created_at', today())->count();
-        $totalContacts     = Contact::count();
-        $unreadContacts    = Contact::where('read', false)->count();
-        $recent            = Booking::latest()->take(5)->get();
+        $totalReservations = $this->bookings->countTotal();
+        $confirmedToday = $this->bookings->countConfirmedToday();
+        $totalContacts = $this->contacts->countTotal();
+        $unreadContacts = $this->contacts->countUnread();
+        $recent = $this->bookings->recent(5);
 
         return view('admin.dashboard', compact(
             'totalReservations', 'confirmedToday', 'totalContacts', 'unreadContacts', 'recent'
@@ -26,33 +33,19 @@ class AdminController extends Controller
 
     public function bookings(Request $request)
     {
-        $query = Booking::latest();
+        $bookings = $this->bookings->paginateForAdmin([
+            'search' => substr(trim($request->get('search', '')), 0, 100),
+            'status' => $request->get('status'),
+            'zone' => $request->get('zone'),
+        ]);
 
-        if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('order_number', 'like', "%$search%")
-                  ->orWhere('first_name', 'like', "%$search%")
-                  ->orWhere('last_name', 'like', "%$search%")
-                  ->orWhere('email', 'like', "%$search%")
-                  ->orWhere('hotel', 'like', "%$search%");
-            });
-        }
-
-        if ($status = $request->get('status')) {
-            $query->where('status', $status);
-        }
-
-        if ($zone = $request->get('zone')) {
-            $query->where('zone', (int) $zone);
-        }
-
-        $bookings = $query->paginate(20)->withQueryString();
         return view('admin.bookings', compact('bookings'));
     }
 
     public function bookingShow(int $id)
     {
-        $booking = Booking::findOrFail($id);
+        $booking = $this->bookings->findById($id);
+
         return view('admin.booking-show', compact('booking'));
     }
 
@@ -60,27 +53,37 @@ class AdminController extends Controller
     {
         $request->validate([
             'status' => 'required|in:pending,confirmed,cancelled,completed',
-            'notes'  => 'nullable|string|max:2000',
+            'notes' => 'nullable|string|max:2000',
         ]);
 
-        $booking = Booking::findOrFail($id);
-        $booking->update([
+        $booking = $this->bookings->findById($id);
+        $this->bookings->updateStatus($booking, [
             'status' => $request->status,
-            'notes'  => $request->notes,
+            'notes' => $request->notes,
         ]);
+
         return back()->with('success', 'Estado actualizado.');
+    }
+
+    public function bookingDestroy(Booking $booking)
+    {
+        $this->bookings->delete($booking);
+
+        return redirect()->route('admin.bookings')->with('success', 'Reservación eliminada.');
     }
 
     public function contacts()
     {
-        $contacts = Contact::latest()->paginate(20);
-        Contact::where('read', false)->update(['read' => true]);
+        $contacts = $this->contacts->paginateForAdmin();
+        $this->contacts->markAllRead();
+
         return view('admin.contacts', compact('contacts'));
     }
 
     public function contactDestroy(Contact $contact)
     {
-        $contact->delete();
+        $this->contacts->delete($contact);
+
         return back()->with('success', 'Mensaje eliminado.');
     }
 
@@ -94,13 +97,13 @@ class AdminController extends Controller
         $user = Auth::user();
 
         $validated = $request->validate([
-            'name'  => 'required|string|max:100',
-            'email' => 'required|email|max:191|unique:users,email,' . $user->id,
+            'name' => 'required|string|max:100',
+            'email' => ['required', 'email', 'max:191', 'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', 'unique:users,email,'.$user->id],
         ], [
-            'name.required'  => 'El nombre es obligatorio.',
+            'name.required' => 'El nombre es obligatorio.',
             'email.required' => 'El correo es obligatorio.',
-            'email.email'    => 'Introduce un correo válido.',
-            'email.unique'   => 'Este correo ya está en uso.',
+            'email.email' => 'Introduce un correo válido.',
+            'email.unique' => 'Este correo ya está en uso.',
         ]);
 
         $user->update($validated);
@@ -112,17 +115,17 @@ class AdminController extends Controller
     {
         $request->validate([
             'current_password' => 'required',
-            'password'         => ['required', 'confirmed', Password::min(8)],
+            'password' => ['required', 'confirmed', Password::min(8)],
         ], [
             'current_password.required' => 'Ingresa tu contraseña actual.',
-            'password.required'         => 'La nueva contraseña es obligatoria.',
-            'password.confirmed'        => 'Las contraseñas no coinciden.',
-            'password.min'              => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.required' => 'La nueva contraseña es obligatoria.',
+            'password.confirmed' => 'Las contraseñas no coinciden.',
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
         ]);
 
         $user = Auth::user();
 
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (! Hash::check($request->current_password, $user->password)) {
             return back()->withErrors(['current_password' => 'La contraseña actual no es correcta.']);
         }
 

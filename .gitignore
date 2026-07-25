@@ -16,3 +16,4 @@ yarn-error.log
 /.idea
 /.vscode
 *.zip
+.DS_Store

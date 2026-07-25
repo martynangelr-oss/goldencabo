@@ -155,9 +155,16 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
       <span>
         <strong>Imagen principal:</strong> 900 × 600 px (3:2) ·
-        <strong>Imagen secundaria:</strong> 600 × 400 px (3:2) · JPG/PNG/WEBP · Máx. 4 MB c/u
+        <strong>Imagen secundaria:</strong> 600 × 400 px (3:2) · JPG/PNG/WEBP · Máx. 30 MB c/u
       </span>
     </div>
+
+    @if($errors->hasAny(['image', 'image_secondary']))
+      <div style="background:#FEE2E2;color:#991B1B;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:.82rem">
+        @foreach($errors->get('image') as $e) <div>• {{ $e }}</div> @endforeach
+        @foreach($errors->get('image_secondary') as $e) <div>• {{ $e }}</div> @endforeach
+      </div>
+    @endif
 
     <form id="zoneImgForm" method="POST" action="" enctype="multipart/form-data">
       @csrf
@@ -320,7 +327,15 @@ function openImgZone(btn) {
   document.getElementById('imgZoneSec').src  = d.imgSec;
   showModal('zoneImgModal');
 }
-function closeImgModal() { hideModal('zoneImgModal'); }
+function closeImgModal() {
+  hideModal('zoneImgModal');
+  // Reset file inputs so a previous selection doesn't carry over to the next zone
+  document.getElementById('zoneImgForm').querySelectorAll('input[type=file]').forEach(function(el) {
+    el.value = '';
+  });
+  document.getElementById('imgZoneMain').src = '';
+  document.getElementById('imgZoneSec').src  = '';
+}
 
 function previewZoneImg(input, targetId) {
   if (input.files && input.files[0]) {
@@ -329,6 +344,11 @@ function previewZoneImg(input, targetId) {
     reader.readAsDataURL(input.files[0]);
   }
 }
+
+// Auto-reopen image modal if there are validation errors from a failed upload
+@if($errors->hasAny(['image', 'image_secondary']))
+  showModal('zoneImgModal');
+@endif
 
 // Close on backdrop click
 ['zoneModal','hotelModal','zoneImgModal'].forEach(function(id) {

@@ -518,6 +518,21 @@ function gcSetLang(lang) {
     if (typeof val === 'string') el.placeholder = val;
   });
 
+  // Swap dynamic text content (data-lang-es / data-lang-en)
+  document.querySelectorAll('[data-lang-' + lang + ']').forEach(function(el) {
+    el.textContent = el.getAttribute('data-lang-' + lang);
+  });
+
+  // Swap dynamic tag lists (data-tags-es / data-tags-en)
+  document.querySelectorAll('[data-tags-' + lang + ']').forEach(function(el) {
+    try {
+      var tags = JSON.parse(el.getAttribute('data-tags-' + lang) || '[]');
+      el.innerHTML = tags.map(function(t) {
+        return '<span class="ttag">' + t + '</span>';
+      }).join('');
+    } catch(e) {}
+  });
+
   // Update lang toggle buttons
   var btnEs = document.getElementById('btn-lang-es');
   var btnEn = document.getElementById('btn-lang-en');

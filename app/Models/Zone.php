@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class Zone extends Model
 {
@@ -25,7 +24,7 @@ class Zone extends Model
         if ($this->image_path) {
             return str_starts_with($this->image_path, 'http')
                 ? $this->image_path
-                : Storage::disk('public')->url($this->image_path);
+                : asset('storage/' . $this->image_path);
         }
         return self::$defaults[$this->number][0]
             ?? 'https://images.unsplash.com/photo-1512813195386-6cf811ad3542?w=900&q=85';
@@ -36,7 +35,7 @@ class Zone extends Model
         if ($this->image_path_secondary) {
             return str_starts_with($this->image_path_secondary, 'http')
                 ? $this->image_path_secondary
-                : Storage::disk('public')->url($this->image_path_secondary);
+                : asset('storage/' . $this->image_path_secondary);
         }
         return self::$defaults[$this->number][1]
             ?? 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=600&q=80';

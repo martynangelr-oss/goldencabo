@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class GalleryImage extends Model
 {
@@ -19,7 +18,7 @@ class GalleryImage extends Model
         if (str_starts_with($this->image_path, 'http')) {
             return $this->image_path;
         }
-        return Storage::disk('public')->url($this->image_path);
+        return asset('storage/' . $this->image_path);
     }
 
     public function scopeActive($query)

@@ -7,12 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Tour extends Model
 {
     protected $fillable = [
-        'name', 'duration', 'route_description', 'destinations',
-        'price_usd', 'is_active', 'image_path', 'sort_order',
+        'name', 'name_en', 'duration', 'route_description', 'route_description_en',
+        'destinations', 'destinations_en', 'price_usd', 'price_label',
+        'is_active', 'image_path', 'sort_order',
     ];
 
     protected $casts = [
-        'destinations' => 'array',
+        'destinations'    => 'array',
+        'destinations_en' => 'array',
         'price_usd'    => 'float',
         'is_active'    => 'boolean',
     ];
@@ -30,6 +32,15 @@ class Tour extends Model
     public function getPriceFormattedAttribute(): string
     {
         return '$' . number_format($this->price_usd, 0) . ' USD';
+    }
+
+    public function getPriceSuffixAttribute(): string
+    {
+        return match($this->price_label) {
+            'group'  => '/ grupo',
+            'person' => '/ persona',
+            default  => '',
+        };
     }
 
     public function scopeActive($query)

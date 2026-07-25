@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 
 class SiteSetting extends Model
 {
@@ -32,6 +31,6 @@ class SiteSetting extends Model
         $val = static::get($key);
         if (!$val) return null;
         if (str_starts_with($val, 'http')) return $val;
-        return Storage::disk('public')->url($val);
+        return asset('storage/' . $val);
     }
 }

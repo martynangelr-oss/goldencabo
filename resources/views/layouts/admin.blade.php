@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<meta name="session-timeout" content="{{ max(5, min(480, (int) \App\Models\SiteSetting::get('session_timeout_minutes', '15'))) }}">
 <title>@yield('page-title', 'Dashboard') — Golden Cabo Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -510,7 +511,11 @@ tbody tr:hover td{background:#FAFCFC}
     </a>
 
     {{-- Gestión --}}
+    @if(Auth::user()->hasPermission('bookings') || Auth::user()->hasPermission('contacts'))
     <div class="sb-section-label" style="margin-top:8px">Gestión</div>
+    @endif
+
+    @if(Auth::user()->hasPermission('bookings'))
     <a href="{{ route('admin.bookings') }}"
        class="sb-item {{ request()->routeIs('admin.booking*') ? 'active' : '' }}">
       <span class="sb-icon">
@@ -522,7 +527,9 @@ tbody tr:hover td{background:#FAFCFC}
       </span>
       Reservaciones
     </a>
+    @endif
 
+    @if(Auth::user()->hasPermission('contacts'))
     <a href="{{ route('admin.contacts') }}"
        class="sb-item {{ request()->routeIs('admin.contacts') ? 'active' : '' }}">
       <span class="sb-icon">
@@ -537,11 +544,28 @@ tbody tr:hover td{background:#FAFCFC}
         <span class="sb-badge">{{ $unread }}</span>
       @endif
     </a>
+    @endif
+
+    {{-- Usuarios (solo admins) --}}
+    @if(Auth::user()->isAdmin())
+    <a href="{{ route('admin.users.index') }}"
+       class="sb-item {{ request()->routeIs('admin.users*') ? 'active' : '' }}">
+      <span class="sb-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </span>
+      Usuarios
+    </a>
+    @endif
 
     <div class="sb-divider"></div>
 
     {{-- CMS --}}
+    @if(Auth::user()->hasPermission('cms'))
     <div class="sb-section-label" style="margin-top:8px">CMS</div>
+    @if(Auth::user()->hasPermission('vehicles'))
     <a href="{{ route('admin.cms.vehicles.index') }}"
        class="sb-item {{ request()->routeIs('admin.cms.vehicles*') ? 'active' : '' }}">
       <span class="sb-icon">
@@ -552,6 +576,8 @@ tbody tr:hover td{background:#FAFCFC}
       Vehículos
     </a>
 
+    @endif
+    @if(Auth::user()->hasPermission('tours'))
     <a href="{{ route('admin.cms.tours.index') }}"
        class="sb-item {{ request()->routeIs('admin.cms.tours*') ? 'active' : '' }}">
       <span class="sb-icon">
@@ -561,7 +587,9 @@ tbody tr:hover td{background:#FAFCFC}
       </span>
       Tours
     </a>
+    @endif
 
+    @if(Auth::user()->hasPermission('zones'))
     <a href="{{ route('admin.cms.zones.index') }}"
        class="sb-item {{ request()->routeIs('admin.cms.zones*') ? 'active' : '' }}">
       <span class="sb-icon">
@@ -571,7 +599,9 @@ tbody tr:hover td{background:#FAFCFC}
       </span>
       Zonas & Hoteles
     </a>
+    @endif
 
+    @if(Auth::user()->hasPermission('carousel'))
     <a href="{{ route('admin.cms.carousel.index') }}"
        class="sb-item {{ request()->routeIs('admin.cms.carousel*') ? 'active' : '' }}">
       <span class="sb-icon">
@@ -581,7 +611,9 @@ tbody tr:hover td{background:#FAFCFC}
       </span>
       Carrusel Inicio
     </a>
+    @endif
 
+    @if(Auth::user()->hasPermission('gallery'))
     <a href="{{ route('admin.cms.gallery.index') }}"
        class="sb-item {{ request()->routeIs('admin.cms.gallery*') ? 'active' : '' }}">
       <span class="sb-icon">
@@ -591,7 +623,9 @@ tbody tr:hover td{background:#FAFCFC}
       </span>
       Galería de Viajes
     </a>
+    @endif
 
+    @if(Auth::user()->hasPermission('sections'))
     <a href="{{ route('admin.cms.section-images.index') }}"
        class="sb-item {{ request()->routeIs('admin.cms.section-images*') ? 'active' : '' }}">
       <span class="sb-icon">
@@ -602,9 +636,12 @@ tbody tr:hover td{background:#FAFCFC}
       </span>
       Imágenes Secciones
     </a>
+    @endif
+    @endif {{-- end hasPermission('cms') --}}
 
     <div class="sb-divider"></div>
 
+    @if(Auth::user()->hasPermission('settings'))
     <div class="sb-section-label" style="margin-top:8px">Configuración</div>
     <a href="{{ route('admin.cms.settings.index') }}"
        class="sb-item {{ request()->routeIs('admin.cms.settings*') ? 'active' : '' }}">
@@ -615,6 +652,7 @@ tbody tr:hover td{background:#FAFCFC}
       </span>
       Config. Global
     </a>
+    @endif
 
     <div class="sb-divider"></div>
 
@@ -635,30 +673,6 @@ tbody tr:hover td{background:#FAFCFC}
 
   </nav>
 
-  {{-- Profile footer --}}
-  <div class="sb-footer">
-    <a href="{{ route('admin.profile') }}"
-       class="sb-profile-btn {{ request()->routeIs('admin.profile') ? 'active' : '' }}"
-       style="{{ request()->routeIs('admin.profile') ? 'background:rgba(255,255,255,.06)' : '' }}">
-      <div class="sb-avatar">{{ substr(Auth::user()->name, 0, 1) }}</div>
-      <div class="sb-profile-info">
-        <div class="sb-profile-name">{{ Auth::user()->name }}</div>
-        <div class="sb-profile-role">Administrador</div>
-      </div>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-      </svg>
-    </a>
-
-    <button type="button" class="sb-logout" onclick="document.getElementById('_logout_form').submit()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-        <polyline points="16 17 21 12 16 7"/>
-        <line x1="21" y1="12" x2="9" y2="12"/>
-      </svg>
-      Cerrar Sesión
-    </button>
-  </div>
 
 </aside>
 
@@ -671,10 +685,26 @@ tbody tr:hover td{background:#FAFCFC}
       <h1 class="topbar-title">@yield('page-title', 'Dashboard')</h1>
     </div>
     <div class="topbar-right">
-      <div class="topbar-user">
+      <a href="{{ route('admin.profile') }}"
+         style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:8px;background:var(--bg);border:1px solid var(--border);text-decoration:none;transition:background .18s"
+         onmouseover="this.style.background='var(--teal-lt)'" onmouseout="this.style.background='var(--bg)'">
         <div class="topbar-user-avatar">{{ substr(Auth::user()->name, 0, 1) }}</div>
-        <span class="topbar-user-name">{{ Auth::user()->name }}</span>
-      </div>
+        <div style="line-height:1.2">
+          <div class="topbar-user-name">{{ Auth::user()->name }}</div>
+          <div style="font-size:.62rem;color:var(--txt2)">{{ Auth::user()->isAdmin() ? 'Administrador' : 'Editor' }}</div>
+        </div>
+      </a>
+      <button type="button"
+              onclick="document.getElementById('_logout_form').submit()"
+              style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--txt2);font-size:.75rem;font-weight:500;cursor:pointer;transition:all .18s"
+              onmouseover="this.style.background='#FEE2E2';this.style.color='var(--danger)';this.style.borderColor='#FECACA'" onmouseout="this.style.background='var(--bg)';this.style.color='var(--txt2)';this.style.borderColor='var(--border)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Salir
+      </button>
     </div>
   </div>
 
@@ -692,6 +722,19 @@ tbody tr:hover td{background:#FAFCFC}
         {{ session('error') }}
       </div>
     @endif
+    @if($errors->any() && !$errors->hasBag('login'))
+      <div class="alert alert-error" style="flex-direction:column;align-items:flex-start;gap:4px">
+        <div style="display:flex;align-items:center;gap:8px;font-weight:600">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Corrige los siguientes errores:
+        </div>
+        <ul style="margin:4px 0 0 24px;font-size:.8rem">
+          @foreach($errors->all() as $err)
+            <li>{{ $err }}</li>
+          @endforeach
+        </ul>
+      </div>
+    @endif
     @yield('content')
   </div>
 
@@ -701,6 +744,73 @@ tbody tr:hover td{background:#FAFCFC}
 <form id="_logout_form" method="POST" action="{{ route('logout') }}" style="display:none">
   @csrf
 </form>
+
+{{-- Session timeout warning modal --}}
+<div id="_session_warn" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:var(--radius);padding:32px;max-width:380px;width:calc(100% - 40px);box-shadow:var(--shadow-md);text-align:center">
+    <div style="width:56px;height:56px;border-radius:50%;background:#FEF3C7;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <h3 style="font-size:1rem;font-weight:700;color:var(--txt);margin-bottom:8px">Sesión por expirar</h3>
+    <p style="font-size:.85rem;color:var(--txt2);margin-bottom:6px">Tu sesión cerrará por inactividad en:</p>
+    <div id="_session_countdown" style="font-size:2.5rem;font-weight:700;color:var(--warn);margin:12px 0">2:00</div>
+    <p style="font-size:.78rem;color:var(--txt2);margin-bottom:20px">Haz clic en "Continuar" para mantener la sesión activa.</p>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button onclick="document.getElementById('_logout_form').submit()" class="btn btn-ghost">Cerrar sesión</button>
+      <button onclick="keepAlive()" class="btn btn-primary">Continuar sesión</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const metaEl  = document.querySelector('meta[name="session-timeout"]');
+  const minutes = metaEl ? parseInt(metaEl.content, 10) : 15;
+  const totalMs = minutes * 60 * 1000;
+  const warnMs  = Math.min(2 * 60 * 1000, totalMs * 0.2); // warn at 2 min or 20% remaining
+
+  let warnTimer, logoutTimer, countdownInterval;
+
+  function startTimers() {
+    clearTimeout(warnTimer);
+    clearTimeout(logoutTimer);
+    clearInterval(countdownInterval);
+
+    warnTimer = setTimeout(showWarning, totalMs - warnMs);
+    logoutTimer = setTimeout(function () {
+      document.getElementById('_logout_form').submit();
+    }, totalMs);
+  }
+
+  function showWarning() {
+    const modal = document.getElementById('_session_warn');
+    modal.style.display = 'flex';
+    let secs = Math.round(warnMs / 1000);
+    updateCountdown(secs);
+    countdownInterval = setInterval(function () {
+      secs--;
+      updateCountdown(Math.max(0, secs));
+    }, 1000);
+  }
+
+  function updateCountdown(secs) {
+    const m = String(Math.floor(secs / 60)).padStart(1, '0');
+    const s = String(secs % 60).padStart(2, '0');
+    document.getElementById('_session_countdown').textContent = m + ':' + s;
+  }
+
+  window.keepAlive = function () {
+    document.getElementById('_session_warn').style.display = 'none';
+    clearInterval(countdownInterval);
+    // Ping server to reset last_activity
+    fetch(window.location.href, { method: 'HEAD', credentials: 'same-origin' })
+      .catch(function () {});
+    startTimers();
+  };
+
+  startTimers();
+})();
+</script>
 
 </body>
 </html>

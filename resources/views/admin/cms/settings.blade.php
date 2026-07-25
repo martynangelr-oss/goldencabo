@@ -199,6 +199,21 @@
 
         <div class="sb-divider" style="margin:16px 0"></div>
 
+        {{-- Seguridad --}}
+        <div style="font-size:.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--txt2);margin-bottom:10px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Seguridad de Sesión
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label>Tiempo de inactividad (minutos)</label>
+          <input type="number" name="session_timeout_minutes" min="5" max="480"
+                 value="{{ old('session_timeout_minutes', SiteSetting::get('session_timeout_minutes', '15')) }}"
+                 style="width:100%">
+          <p class="form-hint">Rango: 5 – 480 minutos. El panel cerrará sesión automáticamente tras este tiempo sin actividad.</p>
+        </div>
+
+        <div class="sb-divider" style="margin:16px 0"></div>
+
         <div style="font-size:.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--txt2);margin-bottom:10px">Guía de logo</div>
         <ul style="font-size:.75rem;color:var(--txt2);line-height:2;padding-left:16px">
           <li>Ancho ideal: <strong>240 px</strong></li>

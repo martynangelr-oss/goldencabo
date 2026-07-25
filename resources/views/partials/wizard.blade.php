@@ -1,6 +1,10 @@
 <div class="wov" id="wov">
   <div class="wbox">
     <button class="wx" onclick="closeW()">✕</button>
+    <div class="gc-hp" aria-hidden="true">
+      <label for="wz-hp-field">Dejar en blanco</label>
+      <input type="text" id="wz-hp-field" tabindex="-1" autocomplete="off">
+    </div>
     <div class="whead">
       <div class="wtitle" data-i18n="wizard.title">Reservar Traslado</div>
       <div class="wsteps">

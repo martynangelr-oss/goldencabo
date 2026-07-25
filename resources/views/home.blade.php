@@ -299,16 +299,26 @@ nav.solid .gc-lang-div { color:rgba(5,30,28,.25); }
           <div class="tdur">⏱ {{ $tour['duration'] }}</div>
         </div>
         <div class="tbody">
-          <div class="tname">{{ $tour['name'] }}</div>
-          <p class="tdesc">{{ $tour['description'] }}</p>
-          <div class="ttags">
+          <div class="tname"
+               data-lang-es="{{ $tour['name'] }}"
+               data-lang-en="{{ $tour['name_en'] }}">{{ $tour['name'] }}</div>
+          <p class="tdesc"
+             data-lang-es="{{ $tour['description'] }}"
+             data-lang-en="{{ $tour['description_en'] }}">{{ $tour['description'] }}</p>
+          <div class="ttags"
+               data-tags-es="{{ json_encode($tour['tags']) }}"
+               data-tags-en="{{ json_encode($tour['tags_en']) }}">
             @foreach($tour['tags'] as $tag)
               <span class="ttag">{{ $tag }}</span>
             @endforeach
           </div>
           <div class="tfoot">
-            <div class="tpriceb">{{ $tour['price'] }} <small data-i18n="tours.per_group">/ grupo</small></div>
-            <button class="btn btn-teal btn-sm" onclick="openTourModal('{{ addslashes($tour['name']) }}')" data-i18n="tours.book">Reservar</button>
+            <div class="tpriceb">{{ $tour['price'] }}@if(!empty($tour['price_suffix'])) <small>{{ $tour['price_suffix'] }}</small>@endif</div>
+            <button class="btn btn-teal btn-sm"
+                    data-name-es="{{ $tour['name'] }}"
+                    data-name-en="{{ $tour['name_en'] }}"
+                    onclick="openTourModal(this.getAttribute('data-name-' + (window.GC_LANG||'es')))"
+                    data-i18n="tours.book">Reservar</button>
           </div>
         </div>
       </div>
@@ -379,6 +389,11 @@ nav.solid .gc-lang-div { color:rgba(5,30,28,.25); }
         <div class="cf-title" data-i18n="contact.form_title">Solicitar Información</div>
         <form id="contactForm">
           @csrf
+          <div class="gc-hp" aria-hidden="true">
+            <label for="cf-hp-field">Dejar en blanco</label>
+            <input type="text" id="cf-hp-field" name="hp_field" tabindex="-1" autocomplete="off">
+          </div>
+          <input type="hidden" name="form_ts" value="{{ now()->timestamp }}">
           <div class="fg-row">
             <div class="fg"><label data-i18n="contact.first_name">Nombre</label><input type="text" name="first_name" placeholder="Su nombre" data-i18n-placeholder="contact.ph_first" required></div>
             <div class="fg"><label data-i18n="contact.last_name">Apellido</label><input type="text" name="last_name" placeholder="Su apellido" data-i18n-placeholder="contact.ph_last"></div>
@@ -494,6 +509,7 @@ window.BOOKING_API = '{{ route("bookings.store") }}';
 window.CONTACT_API = '{{ route("contact.store") }}';
 window.HOTELS_DB   = @json($hotels);
 window.SERVER_NOW  = { hour: {{ now()->hour }}, minute: {{ now()->minute }} };
+window.FORM_TS     = {{ now()->timestamp }};
 window.SITE_LOGO   = '{{ $siteSettings["logo"] ?? "" }}';
 </script>
 
@@ -528,6 +544,11 @@ window.SITE_LOGO   = '{{ $siteSettings["logo"] ?? "" }}';
 
     {{-- Form --}}
     <form id="tourContactForm" style="padding:20px 28px 28px">
+
+      <div class="gc-hp" aria-hidden="true">
+        <label for="tm-hp-field">Dejar en blanco</label>
+        <input type="text" id="tm-hp-field" name="hp_field" tabindex="-1" autocomplete="off">
+      </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
         <div style="display:flex;flex-direction:column;gap:5px">
@@ -744,6 +765,8 @@ async function submitTourContact() {
     phone:      tmHid ? tmHid.value : phoneDigits,
     service:    form.querySelector('[name="service"]').value,
     message:    form.querySelector('[name="message"]').value.trim(),
+    hp_field:   (document.getElementById('tm-hp-field') || {}).value || '',
+    form_ts:    window.FORM_TS,
   };
 
   try {

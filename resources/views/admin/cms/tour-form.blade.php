@@ -38,22 +38,36 @@
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
           <div class="fg">
-            <label>Nombre <span style="color:var(--danger)">*</span></label>
+            <label>Nombre (ES) <span style="color:var(--danger)">*</span></label>
             <input type="text" name="name" value="{{ old('name', $tour->name) }}"
                    placeholder="Ej: Recorrido a La Paz" required>
           </div>
           <div class="fg">
-            <label>Duración</label>
-            <input type="text" name="duration" value="{{ old('duration', $tour->duration) }}"
-                   placeholder="Ej: 10 horas">
+            <label>Name (EN)</label>
+            <input type="text" name="name_en" value="{{ old('name_en', $tour->name_en) }}"
+                   placeholder="Ej: Trip to La Paz">
           </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="fg">
+          <label>Duración</label>
+          <input type="text" name="duration" value="{{ old('duration', $tour->duration) }}"
+                 placeholder="Ej: 10 horas">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
           <div class="fg">
             <label>Precio (USD) <span style="color:var(--danger)">*</span></label>
             <input type="number" name="price_usd" value="{{ old('price_usd', $tour->price_usd ?? '') }}"
                    step="0.01" min="0" placeholder="420" required>
+          </div>
+          <div class="fg">
+            <label>Etiqueta de precio</label>
+            <select name="price_label">
+              <option value="group"  {{ old('price_label', $tour->price_label ?? 'group') === 'group'  ? 'selected' : '' }}>/ grupo</option>
+              <option value="person" {{ old('price_label', $tour->price_label ?? 'group') === 'person' ? 'selected' : '' }}>/ persona</option>
+              <option value="none"   {{ old('price_label', $tour->price_label ?? 'group') === 'none'   ? 'selected' : '' }}>Sin etiqueta</option>
+            </select>
           </div>
           <div class="fg">
             <label>Orden de aparición</label>
@@ -61,10 +75,17 @@
           </div>
         </div>
 
-        <div class="fg">
-          <label>Descripción de Ruta</label>
-          <textarea name="route_description" rows="5"
-                    placeholder="Describe el recorrido, puntos de interés, lo que incluye...">{{ old('route_description', $tour->route_description) }}</textarea>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="fg">
+            <label>Descripción de Ruta (ES)</label>
+            <textarea name="route_description" rows="5"
+                      placeholder="Describe el recorrido, puntos de interés, lo que incluye...">{{ old('route_description', $tour->route_description) }}</textarea>
+          </div>
+          <div class="fg">
+            <label>Route Description (EN)</label>
+            <textarea name="route_description_en" rows="5"
+                      placeholder="Describe the tour, points of interest, what's included...">{{ old('route_description_en', $tour->route_description_en) }}</textarea>
+          </div>
         </div>
 
         <div class="fg" style="margin-bottom:0;display:flex;align-items:center;gap:12px">
@@ -81,27 +102,52 @@
       {{-- Destinos --}}
       <div class="card">
         <div class="form-section-title" style="margin-bottom:16px;font-weight:600;font-size:.85rem;color:var(--teal);text-transform:uppercase;letter-spacing:.5px">
-          Lista de Destinos / Puntos del Recorrido
+          Destinos / Puntos del Recorrido
         </div>
 
-        <div id="destList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
-          @foreach(($tour->destinations ?? []) as $dest)
-            <div class="dest-item">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/></svg>
-              <span>{{ $dest }}</span>
-              <button type="button" onclick="removeDest(this)" style="margin-left:auto">✕</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div>
+            <div style="font-size:.72rem;font-weight:700;color:var(--txt2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Español</div>
+            <div id="destList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">
+              @foreach(($tour->destinations ?? []) as $dest)
+                <div class="dest-item">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/></svg>
+                  <span>{{ $dest }}</span>
+                  <button type="button" onclick="removeDest(this,'destHidden')" style="margin-left:auto">✕</button>
+                </div>
+              @endforeach
             </div>
-          @endforeach
-        </div>
+            <div style="display:flex;gap:8px">
+              <input type="text" id="destInput" placeholder="Agregar destino"
+                     style="flex:1;padding:9px 12px;border-radius:var(--radius-sm);border:1.5px solid var(--border);font-size:.85rem;outline:none"
+                     onkeydown="if(event.key==='Enter'){event.preventDefault();addDest('destInput','destList','destHidden')}"
+                     onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='var(--border)'">
+              <button type="button" onclick="addDest('destInput','destList','destHidden')" class="btn btn-primary btn-sm">+</button>
+            </div>
+            <textarea name="destinations" id="destHidden" style="display:none">{{ old('destinations', implode("\n", $tour->destinations ?? [])) }}</textarea>
+          </div>
 
-        <div style="display:flex;gap:8px">
-          <input type="text" id="destInput" placeholder="Agregar destino (Enter para confirmar)"
-                 style="flex:1;padding:9px 12px;border-radius:var(--radius-sm);border:1.5px solid var(--border);font-size:.85rem;outline:none"
-                 onkeydown="if(event.key==='Enter'){event.preventDefault();addDest()}"
-                 onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='var(--border)'">
-          <button type="button" onclick="addDest()" class="btn btn-primary btn-sm">+ Agregar</button>
+          <div>
+            <div style="font-size:.72rem;font-weight:700;color:var(--txt2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">English</div>
+            <div id="destListEn" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">
+              @foreach(($tour->destinations_en ?? []) as $dest)
+                <div class="dest-item">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/></svg>
+                  <span>{{ $dest }}</span>
+                  <button type="button" onclick="removeDest(this,'destHiddenEn')" style="margin-left:auto">✕</button>
+                </div>
+              @endforeach
+            </div>
+            <div style="display:flex;gap:8px">
+              <input type="text" id="destInputEn" placeholder="Add destination"
+                     style="flex:1;padding:9px 12px;border-radius:var(--radius-sm);border:1.5px solid var(--border);font-size:.85rem;outline:none"
+                     onkeydown="if(event.key==='Enter'){event.preventDefault();addDest('destInputEn','destListEn','destHiddenEn')}"
+                     onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='var(--border)'">
+              <button type="button" onclick="addDest('destInputEn','destListEn','destHiddenEn')" class="btn btn-primary btn-sm">+</button>
+            </div>
+            <textarea name="destinations_en" id="destHiddenEn" style="display:none">{{ old('destinations_en', implode("\n", $tour->destinations_en ?? [])) }}</textarea>
+          </div>
         </div>
-        <textarea name="destinations" id="destHidden" style="display:none">{{ old('destinations', implode("\n", $tour->destinations ?? [])) }}</textarea>
       </div>
 
     </div>
@@ -178,26 +224,27 @@
 
 <script>
 // Destinations
-function updateDestHidden() {
-  const items = document.querySelectorAll('#destList .dest-item span');
-  document.getElementById('destHidden').value = Array.from(items).map(i => i.textContent).join('\n');
+function updateDestHidden(hiddenId) {
+  const list = document.getElementById(hiddenId === 'destHidden' ? 'destList' : 'destListEn');
+  document.getElementById(hiddenId).value = Array.from(list.querySelectorAll('.dest-item span')).map(i => i.textContent).join('\n');
 }
-function addDest() {
-  const input = document.getElementById('destInput');
+function addDest(inputId, listId, hiddenId) {
+  const input = document.getElementById(inputId);
   const val = input.value.trim();
   if (!val) return;
   const div = document.createElement('div');
   div.className = 'dest-item';
-  div.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/></svg><span>${val}</span><button type="button" onclick="removeDest(this)" style="margin-left:auto">✕</button>`;
-  document.getElementById('destList').appendChild(div);
+  div.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/></svg><span>${val}</span><button type="button" onclick="removeDest(this,'${hiddenId}')" style="margin-left:auto">✕</button>`;
+  document.getElementById(listId).appendChild(div);
   input.value = '';
-  updateDestHidden();
+  updateDestHidden(hiddenId);
 }
-function removeDest(btn) {
+function removeDest(btn, hiddenId) {
   btn.closest('.dest-item').remove();
-  updateDestHidden();
+  updateDestHidden(hiddenId);
 }
-updateDestHidden();
+updateDestHidden('destHidden');
+updateDestHidden('destHiddenEn');
 
 // Image
 const drop = document.getElementById('imgDrop');
