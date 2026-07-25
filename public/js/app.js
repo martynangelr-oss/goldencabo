@@ -523,6 +523,8 @@ async function submitReservation() {
       arrival_hour: document.getElementById('f-hh').value,
       arrival_minute: document.getElementById('f-mn').value,
       terms: '1',
+      hp_field: (document.getElementById('wz-hp-field') || {}).value || '',
+      form_ts: window.FORM_TS,
     };
     const resp = await fetch(window.BOOKING_API, {
       method: 'POST',

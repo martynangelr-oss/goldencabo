@@ -71,6 +71,9 @@ button,input,select,textarea{font-family:var(--fj)}
 .gc-toast.gc-toast--show{opacity:1;transform:translateX(-50%) translateY(0)}
 .gc-toast svg{flex-shrink:0}
 
+/* Anti-bot honeypot field: kept in the layout flow (not display:none) so scrapers that skip hidden fields still fill it */
+.gc-hp{position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;opacity:0}
+
 /* HERO */
 #hero{position:relative;height:100vh;min-height:640px;display:flex;align-items:center;overflow:hidden}
 .hs{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.3s ease}
@@ -154,9 +157,9 @@ h2.display.inv em{color:#7FFFF0}
 .zbtn:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(0,0,0,.2)}
 .zstack{position:relative;height:clamp(280px,40vw,420px)}
 .zimg-a{position:absolute;right:0;top:0;width:83%;height:84%;border-radius:var(--r28);overflow:hidden;box-shadow:var(--sh-xl)}
-.zimg-a img{width:100%;height:100%;object-fit:cover}
+.zimg-a img{width:100%;height:100%;object-fit:cover;object-position:center center}
 .zimg-b{position:absolute;left:0;bottom:0;width:48%;height:50%;border-radius:var(--r20);overflow:hidden;border:5px solid #fff;box-shadow:var(--sh-m)}
-.zimg-b img{width:100%;height:100%;object-fit:cover}
+.zimg-b img{width:100%;height:100%;object-fit:cover;object-position:center center}
 .zfloat{position:absolute;right:-16px;top:50%;transform:translateY(-50%);background:#fff;border-radius:var(--r16);padding:16px 20px;box-shadow:var(--sh-m);text-align:center;animation:bob 4.5s ease-in-out infinite}
 @keyframes bob{0%,100%{transform:translateY(-50%)}50%{transform:translateY(calc(-50% - 10px))}}
 .zf-n{font-family:var(--fp);font-size:1.5rem;font-weight:700;color:var(--T);line-height:1}
